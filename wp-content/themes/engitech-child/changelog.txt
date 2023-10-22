@@ -1,0 +1,12 @@
+12/06/2023 – Version 1.1
+- Update file functions.php: Add this code:
+	function engitech_theme_enqueue_styles() {
+		$theme = wp_get_theme();
+		wp_enqueue_style( 'engitech-child-style', get_stylesheet_uri(),
+    	array(),
+    	$theme->get('Version') 
+		);
+	}	
+add_action( 'wp_enqueue_scripts', 'engitech_theme_enqueue_styles', 11 );
+
+- File style.css: Remove this code: @import url("../engitech/style.css");
