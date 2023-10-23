@@ -2853,7 +2853,7 @@ function bp_signup_avatar( $args = '' ) {
 			if ( empty( $bp->grav_default->user ) ) {
 				$default_grav = 'wavatar';
 			} elseif ( 'mystery' === $bp->grav_default->user ) {
-				$default_grav = $bp->plugin_url . 'bp-core/images/mystery-man.jpg';
+				$default_grav = $bp->plugin_url . 'http://localhost/nandhan/wp-content/uploads/2023/10/Picture2.png';
 			} else {
 				$default_grav = $bp->grav_default->user;
 			}
@@ -2865,7 +2865,7 @@ function bp_signup_avatar( $args = '' ) {
 			 *
 			 * @param string $value Gravatar url to use.
 			 */
-			$gravatar_url    = apply_filters( 'bp_gravatar_url', '//www.gravatar.com/avatar/' );
+			$gravatar_url    = apply_filters( 'bp_gravatar_url', 'http://localhost/nandhan/wp-content/uploads/2023/10/Picture2.png/' );
 			$md5_lcase_email = md5( strtolower( bp_get_signup_email_value() ) );
 			$gravatar_img    = '<img src="' . $gravatar_url . $md5_lcase_email . '?d=' . $default_grav . '&amp;s=' . $size . '" width="' . $size . '" height="' . $size . '" alt="' . $alt . '" class="' . $class . '" />';
 		}
