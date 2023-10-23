@@ -276,32 +276,40 @@ if ( class_exists( 'woocommerce' ) ) {
 	require get_template_directory() . '/inc/woocommerce/woocommerce.php';
 }
 
-function custom_default_profile_picture($avatar, $id_or_email, $size, $default, $alt) {
-    // Check if $id_or_email is an email address.
-    if (is_string($id_or_email)) {
-        $user = get_user_by('email', $id_or_email);
-        if ($user) {
-            $user_id = $user->ID;
-        } else {
-            return $avatar; // Return the default avatar if user not found.
+
+function set_custom_admin_avatar($avatar, $id_or_email, $size) {
+    // Check if the user is an admin.
+    if (is_admin()) {
+        // Get the user ID.
+        $user = false;
+        if (is_numeric($id_or_email)) {
+            $user = get_user_by('ID', $id_or_email);
+        } elseif (is_string($id_or_email)) {
+            if (strpos($id_or_email, '@')) {
+                $user = get_user_by('email', $id_or_email);
+            } else {
+                $user = get_user_by('login', $id_or_email);
+            }
         }
-    } else {
-        $user_id = $id_or_email;
-    }
 
-    // Check if the user has set a custom profile picture.
-    $user_profile_picture = get_user_meta($user_id, 'profile_picture', true);
+        // If the user is an admin and doesn't have a profile picture, use a custom image URL.
+        if ($user && in_array('administrator', $user->roles) && empty($user->user_avatar)) {
+            // Replace this URL with the custom image URL you want to use for admins without a profile picture.
+            $custom_avatar_url = 'http://localhost/nandhan/wp-content/uploads/2023/10/Picture2.png';
 
-    if ($user_profile_picture) {
-        // User has a custom profile picture, display it.
-        $avatar = "<img alt='{$alt}' src='{$user_profile_picture}' class='avatar avatar-{$size}' height='{$size}' width='{$size}' />";
-    } else {
-        // User does not have a custom profile picture, display the default one.
-        $default_image_url = 'http://localhost/nandhan/wp-content/uploads/2023/10/Picture2.png'; 
-        $avatar = "<img alt='{$alt}' src='{$default_image_url}' class='avatar avatar-{$size}' height='{$size}' width='{$size}' />";
+            // You can customize the size of the custom avatar image here.
+            $avatar = "<img alt='' src='{$custom_avatar_url}' class='avatar avatar-{$size} photo avatar-default' height='{$size}' width='{$size}' />";
+        }
     }
 
     return $avatar;
 }
 
-add_filter('get_avatar', 'custom_default_profile_picture', 10, 5);
+add_filter('get_avatar', 'set_custom_admin_avatar', 10, 3);
+
+
+
+
+
+
+
