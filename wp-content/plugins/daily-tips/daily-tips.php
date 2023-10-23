@@ -2,203 +2,106 @@
 /*
 Plugin Name: Daily Tip
 Description: Display and manage daily tips.
-Version: 1.1
+Version: 2.0
 Author: depaksampath
 */
 
+global $wpdb;
+$tablename = $wpdb->prefix . 'daily_tips';
+
+// Create the custom database table for daily tips
+function create_daily_tips_table() {
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'daily_tips';
+    $charset_collate = $wpdb->get_charset_collate();
+
+    $sql = "CREATE TABLE $table_name (
+        id mediumint(9) NOT NULL AUTO_INCREMENT,
+        tip text NOT NULL,
+        PRIMARY KEY (id)
+    ) $charset_collate;";
+
+    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+    dbDelta($sql);
+}
+register_activation_hook(__FILE__, 'create_daily_tips_table');
+
 // Create the admin menu
 function daily_tip_menu() {
-    add_submenu_page(
-        'options-general.php',
-        'Daily Tip Settings',
+    add_menu_page(
+        'Daily Tip',
         'Daily Tip',
         'manage_options',
-        'daily-tip-settings',
-        'daily_tip_settings_page'
+        'daily-tip',
+        'daily_tip_management_page'
     );
 }
 add_action('admin_menu', 'daily_tip_menu');
 
-// Create the settings page
-function daily_tip_settings_page() {
+// Display the management page
+function daily_tip_management_page() {
+    global $wpdb;
+
     if (isset($_POST['save_tip'])) {
-        // Save or update the daily tip.
-        update_option('daily_tip', sanitize_text_field($_POST['daily_tip']));
+        $tip = sanitize_text_field($_POST['daily_tip']);
+        $wpdb->insert($wpdb->prefix . 'daily_tips', array('tip' => $tip));
+        echo '<div class="updated"><p>Tip added successfully.</p></div>';
     }
 
-    if (isset($_POST['delete_tip'])) {
-        // Delete the daily tip.
-        delete_option('daily_tip');
-    }
-
-    $tip = get_option('daily_tip');
+    $tips = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}daily_tips");
     ?>
     <div class="wrap">
-        <h2>Daily Tip Settings</h2>
-        <form method="post">
+        <h2>Daily Tip Management</h2>
+        <h3>Add a Tip</h3>
+        <form method="post" action="">
             <label for="daily_tip">Daily Tip:</label><br>
-            <textarea id="daily_tip" name="daily_tip" rows="5" cols="50"><?php echo esc_textarea($tip); ?></textarea><br>
-            <input type="submit" name="save_tip" class="button button-primary" value="Save Tip">
-            <input type="submit" name="delete_tip" class="button button-secondary" value="Delete Tip">
+            <textarea id="daily_tip" name="daily_tip" rows="5" cols="50"></textarea><br>
+            <input type="submit" name="save_tip" class="button button-primary" value="Add Tip">
         </form>
-    </div>
-    <?php
-}
 
-// Create a shortcode to display the daily tip
-function daily_tip_shortcode($atts) {
-    $tip = get_option('daily_tip');
-    if (!empty($tip)) {
-        return '<div class="daily-tip">' . esc_html($tip) . '</div>';
-    }
-    return ''; // Return an empty string if there's no tip.
-}
-add_shortcode('daily_tip', 'daily_tip_shortcode');
-
-<?php
-
-
-// Create the admin menu
-function daily_tip_menu() {
-    add_submenu_page(
-        'options-general.php',
-        'Daily Tip Settings',
-        'Daily Tip',
-        'manage_options',
-        'daily-tip-settings',
-        'daily_tip_settings_page'
-    );
-}
-add_action('admin_menu', 'daily_tip_menu');
-
-// Create the settings page
-function daily_tip_settings_page() {
-    if (isset($_POST['save_tip'])) {
-        // Save or update the daily tip.
-        update_option('daily_tip', sanitize_text_field($_POST['daily_tip']));
-    }
-
-    if (isset($_POST['delete_tip'])) {
-        // Delete the daily tip.
-        delete_option('daily_tip');
-    }
-
-    $tip = get_option('daily_tip');
-    ?>
-    <div class="wrap">
-        <h2>Daily Tip Settings</h2>
-        <form method="post">
-            <label for="daily_tip">Daily Tip:</label><br>
-            <textarea id="daily_tip" name="daily_tip" rows="5" cols="50"><?php echo esc_textarea($tip); ?></textarea><br>
-            <input type="submit" name="save_tip" class="button button-primary" value="Save Tip">
-            <input type="submit" name="delete_tip" class "button button-secondary" value="Delete Tip">
-        </form>
+        <h3>Manage Tips</h3>
+        <table class="wp-list-table widefat fixed">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Tip</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php
+                if ($tips) {
+                    foreach ($tips as $tip) {
+                        ?>
+                        <tr>
+                            <td><?php echo $tip->id; ?></td>
+                            <td><?php echo esc_html($tip->tip); ?></td>
+                            <td>
+                                <form method="post" action="">
+                                    <input type="hidden" name="tip_id" value="<?php echo $tip->id; ?>">
+                                    <input type="submit" name="edit_tip" class="button button-secondary" value="Edit">
+                                </form>
+                            </td>
+                        </tr>
+                        <?php
+                    }
+                } else {
+                    echo '<tr><td colspan="3">No tips added yet.</td></tr>';
+                }
+                ?>
+            </tbody>
+        </table>
     </div>
     <?php
 }
 
 // Create a shortcode to display the daily tip
 function daily_tip_shortcode() {
-    $tip = get_option('daily_tip');
-    if (!empty($tip)) {
+    global $wpdb;
+    $tip = $wpdb->get_var("SELECT tip FROM {$wpdb->prefix}daily_tips ORDER BY RAND() LIMIT 1");
+    if ($tip) {
         return '<div class="daily-tip">' . esc_html($tip) . '</div>';
     }
     return ''; // Return an empty string if there's no tip.
 }
 add_shortcode('daily_tip', 'daily_tip_shortcode');
-
-// Create a function to display the tips management page
-function daily_tip_management_page() {
-    ?>
-    <div class="wrap">
-        <h2>Daily Tip Management</h2>
-
-        <?php
-        if (isset($_GET['action']) && isset($_GET['tip_id'])) {
-            // Handle actions for editing or deleting a specific tip.
-            if ($_GET['action'] === 'edit') {
-                // Load the tip for editing.
-                $tip_id = sanitize_text_field($_GET['tip_id']);
-                $tip = get_option('daily_tip_' . $tip_id);
-                ?>
-                <h3>Edit Tip</h3>
-                <form method="post" action="">
-                    <input type="hidden" name="tip_id" value="<?php echo $tip_id; ?>">
-                    <label for="daily_tip">Daily Tip:</label><br>
-                    <textarea id="daily_tip" name="daily_tip" rows="5" cols="50"><?php echo esc_textarea($tip); ?></textarea><br>
-                    <input type="submit" name="save_edited_tip" class="button button-primary" value="Save Edited Tip">
-                </form>
-                <?php
-            } elseif ($_GET['action'] === 'delete') {
-                // Delete the selected tip.
-                $tip_id = sanitize_text_field($_GET['tip_id']);
-                delete_option('daily_tip_' . $tip_id);
-                echo '<div class="updated"><p>Tip deleted successfully.</p></div>';
-            }
-        } elseif (isset($_POST['save_edited_tip']) && isset($_POST['tip_id'])) {
-            // Save the edited tip.
-            $tip_id = sanitize_text_field($_POST['tip_id']);
-            update_option('daily_tip_' . $tip_id, sanitize_text_field($_POST['daily_tip']));
-            echo '<div class="updated"><p>Tip edited and saved successfully.</p></div>';
-        }
-
-        // Display the list of tips for management.
-        $tips = get_all_daily_tips();
-        if (!empty($tips)) {
-            ?>
-            <h3>Manage Tips</h3>
-            <table class="wp-list-table widefat fixed">
-                <thead>
-                    <tr>
-                        <th>Tip</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php
-                    foreach ($tips as $tip_id => $tip) {
-                        ?>
-                        <tr>
-                            <td><?php echo esc_html($tip); ?></td>
-                            <td>
-                                <a href="?page=daily-tip-management&action=edit&tip_id=<?php echo $tip_id; ?>">Edit</a> |
-                                <a href="?page=daily-tip-management&action=delete&tip_id=<?php echo $tip_id; ?>" onclick="return confirm('Are you sure you want to delete this tip?')">Delete</a>
-                            </td>
-                        </tr>
-                        <?php
-                    }
-                    ?>
-                </tbody>
-            </table>
-            <?php
-        } else {
-            echo '<p>No tips added yet.</p>';
-        }
-        ?>
-    </div>
-    <?php
-}
-
-// Create a function to retrieve all daily tips
-function get_all_daily_tips() {
-    $tips = array();
-    $tip_id = 1;
-    while ($tip = get_option('daily_tip_' . $tip_id)) {
-        $tips[$tip_id] = $tip;
-        $tip_id++;
-    }
-    return $tips;
-}
-
-// Add the management page to the admin menu
-function add_daily_tip_management_menu() {
-    add_submenu_page(
-        'options-general.php',
-        'Daily Tip Management',
-        'Daily Tip Management',
-        'manage_options',
-        'daily-tip-management',
-        'daily_tip_management_page'
-    );
-}
-add_action('admin_menu', 'add_daily_tip_management_menu');
