@@ -2,8 +2,8 @@
 /*
 Plugin Name: Daily Tips
 Description: Display daily tips to users.
-Version: 1.0
-Author: Your Name
+Version: 1.1
+Author: depaksampath
 */
 
 // Create the daily tips table on activation.
