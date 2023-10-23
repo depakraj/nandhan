@@ -72,4 +72,61 @@ function register_daily_tip_widget() {
 }
 
 add_action('widgets_init', 'register_daily_tip_widget');
-?>
+
+// Create an admin menu item for managing tips.
+function add_daily_tips_menu() {
+    add_menu_page('Daily Tips', 'Daily Tips', 'manage_options', 'daily-tips', 'daily_tips_admin_page');
+}
+
+add_action('admin_menu', 'add_daily_tips_menu');
+
+// Admin Page Callback Function
+function daily_tips_admin_page() {
+    if (isset($_POST['submit_tip'])) {
+        // Handle the form submission and save the tip to the database.
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'daily_tips';
+
+        $tip_text = sanitize_text_field($_POST['tip_text']);
+        $date = date('Y-m-d');
+
+        $wpdb->insert($table_name, array('tip_text' => $tip_text, 'date' => $date));
+    }
+    ?>
+    <div class="wrap">
+        <h2>Add Daily Tip</h2>
+        <form method="post" action="">
+            <div class="daily-tip-form">
+                <textarea name="tip_text" rows="4" cols="50" placeholder="Enter your daily tip here" required></textarea>
+                <p class="submit">
+                    <input type="submit" name="submit_tip" class="button-primary" value="Add Tip">
+                </p>
+            </div>
+        </form>
+        <h2>Manage Daily Tips</h2>
+        <table class="daily-tips-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Tip</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php
+                // Query the database to retrieve existing tips and display them in the table.
+                global $wpdb;
+                $table_name = $wpdb->prefix . 'daily_tips';
+                $tips = $wpdb->get_results("SELECT * FROM $table_name ORDER BY date DESC");
+
+                foreach ($tips as $tip) {
+                    echo "<tr>";
+                    echo "<td>{$tip->date}</td>";
+                    echo "<td>{$tip->tip_text}</td>";
+                    echo "</tr>";
+                }
+                ?>
+            </tbody>
+        </table>
+    </div>
+    <?php
+}
