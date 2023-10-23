@@ -3,7 +3,7 @@
 Plugin Name: Username in Header with Shortcode
 Description: Display the logged-in username in the header with a [username_in_header] shortcode.
 Version: 1.0
-Author: Your Name
+Author: depaksampath
 */
 
 function add_username_to_header() {
