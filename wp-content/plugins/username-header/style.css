@@ -1,0 +1,23 @@
+/* Add a dropdown icon using CSS */
+.username-header {
+    position: relative;
+    display: inline-block;
+}
+
+.username-header a {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: #fff;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+    padding: 10px;
+    text-decoration: none;
+    color: #333;
+    z-index: 1;
+}
+
+.username-header:hover a {
+    display: block;
+}
